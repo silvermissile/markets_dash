@@ -19,14 +19,14 @@ from pages import data_viz
 ####################################
 # INIT APP
 ####################################
-dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
-app = dash.Dash(__name__,
-                external_stylesheets=[dbc.themes.LUX, dbc_css],
-                meta_tags=[{'name':'viewport',
-                            'content':'width=device-width,initial-scale=1.0'}],
-                use_pages=True,
-                )
-server=app.server
+# 不再需要 external_stylesheets，Dash 会自动加载 assets/ 目录下的 CSS 文件
+app = dash.Dash(
+    __name__,
+    meta_tags=[{'name':'viewport',
+                'content':'width=device-width,initial-scale=1.0'}],
+    use_pages=True,
+)
+server = app.server
 
 
 ####################################
@@ -112,4 +112,4 @@ app.index_string = '''
 ####################################
 if __name__ == '__main__':
     server=app.server
-    app.run_server(debug=True)
+    app.run(debug=True)

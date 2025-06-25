@@ -1,0 +1,6 @@
+Symbol,Security,Sector,Sub-Industry,Weight
+AAPL,Apple Inc.,Information Technology,"Technology Hardware, Storage & Peripherals",0.07339999999999999
+MSFT,Microsoft,Information Technology,Systems Software,0.0675
+AMZN,Amazon,Consumer Discretionary,Broadline Retail,0.029500000000000002
+NVDA,Nvidia,Information Technology,Semiconductors,0.0217
+GOOGL,Alphabet Inc. (Class A),Communication Services,Interactive Media & Services,0.021

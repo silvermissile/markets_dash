@@ -91,7 +91,7 @@ def bar_sec(df):
     '''
     df = df.groupby(by='Sector').mean()
     df= df.sort_values(by='YTD',ascending=False)
-
+    print(df)
     fig = px.bar(df,
                  x=df.index,
                  y=['1M','3M','YTD'],
@@ -148,6 +148,12 @@ def line_sector(sector_cum_perf_df):
     Plot cumulative performances of Sectors(EW) vs EW of Sectors
     '''
     sectors = sector_cum_perf_df.columns
+    if sectors.empty or sectors.isnull().all().all():
+        print("sector_df is empty or all NaN")
+    if sector_cum_perf_df.empty or sector_cum_perf_df.isnull().all().all():
+        print("sector_cum_perf is empty or all NaN")
+    else:
+        print(sectors)
     fig = px.line(sector_cum_perf_df,
                      y=sectors,
                      color_discrete_sequence=px.colors.qualitative.Plotly,
@@ -163,5 +169,6 @@ def line_sector(sector_cum_perf_df):
 
     fig.update_yaxes(tickformat='.2f')
 
-
     return fig
+
+

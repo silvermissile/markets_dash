@@ -212,25 +212,29 @@ def heatmap(df):
 ############ EQUITIES ##############
 ####################################
 
-def scat_ind(df,period='1M'):
+def scat_ind(df, period='1M'):
     '''
-
     '''
-    data = df.groupby(by=['Sub-Industry','Sector',],as_index=False).mean()
-    count = df.groupby(by=['Sub-Industry','Sector'],as_index=False).count()
-    data['Count'] = count.YTD
-    data = data.sort_values(by=period,ascending=False)
+    # 只对数值型列做均值
+    numeric_cols = df.select_dtypes(include='number').columns.tolist()
+    # 保证分组列也在
+    group_cols = ['Sub-Industry', 'Sector']
+    use_cols = group_cols + [col for col in numeric_cols if col not in group_cols]
+    data = df[use_cols].groupby(by=group_cols, as_index=False).mean()
+    count = df.groupby(by=group_cols, as_index=False).count()
+    data['Count'] = count.YTD if 'YTD' in count.columns else count.iloc[:, -1]
+    data = data.sort_values(by=period, ascending=False)
 
-
-    fig = px.scatter(data,
-                    x='Sub-Industry',
-                    y=period,
-                    color='Sector',
-                    size = 'Weight',
-                    hover_name='Sub-Industry',
-                    color_discrete_sequence=px.colors.qualitative.Plotly,
-                    hover_data={period:':.2%', 'Weight':':.2%' }
-                )
+    fig = px.scatter(
+        data,
+        x='Sub-Industry',
+        y=period,
+        color='Sector',
+        size='Weight' if 'Weight' in data.columns else None,
+        hover_name='Sub-Industry',
+        color_discrete_sequence=px.colors.qualitative.Plotly,
+        hover_data={period:':.2%', 'Weight':':.2%' if 'Weight' in data.columns else None}
+    )
     fig.update_traces(marker=dict(
         line=dict(
         width=0.5,
@@ -238,7 +242,7 @@ def scat_ind(df,period='1M'):
     ))
     fig.update_layout(margin=dict(l=20, r=20),
                       title=f'Industry EW returns - {period}',
-                      title_font=dict(size = 20),
+                      title_font=dict(size=20),
                       autosize=True,
                      height=800,
                      xaxis_title=None,
@@ -287,26 +291,35 @@ def tree(df,period='1M'):
 
 def bar_sec(df):
     '''
-
     '''
-    df = df.groupby(by='Sector').mean()
-    df= df.sort_values(by='YTD',ascending=False)
+    # 确保有'Sector'列
+    if 'Sector' not in df.columns:
+        df.index.name = 'Sector'
+        df = df.reset_index()
+    # 强制转换三列为float
+    for col in ['YTD', '3M', '2022']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    # 不再groupby，只排序
+    df = df.sort_values(by='YTD', ascending=False)
 
-    fig = px.bar(df,
-                 x=df.index,
-                 y=['YTD','3M','2022'],
-                 color_discrete_sequence=['indianred','grey','darkgrey'],
-                 barmode='group',
-                )
+    fig = px.bar(
+        df,
+        x='Sector',
+        y=['YTD', '3M', '2022'],
+        color_discrete_sequence=['indianred', 'grey', 'darkgrey'],
+        barmode='group',
+    )
 
-    fig.update_layout(margin=dict(l=20, r=20),
-                      title=f'Sector EW returns',
-                      title_font=dict(size = 20),
-                      autosize=True,
-                     height=600,
-                     xaxis_title=None,
-                     yaxis_title=None
-                     )
+    fig.update_layout(
+        margin=dict(l=20, r=20),
+        title=f'Sector EW returns',
+        title_font=dict(size=20),
+        autosize=True,
+        height=600,
+        xaxis_title=None,
+        yaxis_title=None
+    )
 
     fig.update_yaxes(tickformat='.2%')
 
@@ -352,16 +365,17 @@ def line_sector(sector_cum_perf_df):
     '''
     Plot cumulative performances of Sectors(EW) vs EW of Sectors
     '''
+    # 强制索引为DatetimeIndex
+    if not isinstance(sector_cum_perf_df.index, pd.DatetimeIndex):
+        sector_cum_perf_df.index = pd.to_datetime(sector_cum_perf_df.index, errors='coerce')
     data = sector_cum_perf_df.resample('W').mean()
 
-    fig = px.line(data,
-                     y=data.columns,
-                     x=data.index,
-                     color_discrete_sequence=px.colors.qualitative.Plotly,
-                     title=f'Cumulative growth | Sector EW - YTD'
-
-                )
-
+    fig = px.line(
+        data,
+        y=data.columns,
+        color_discrete_sequence=px.colors.qualitative.Plotly,
+        title=f'Cumulative growth | Sector EW - YTD'
+    )
 
     fig.update_layout(margin=dict(l=20, r=20),
                      height=600,
